@@ -9,6 +9,12 @@
         <URL value="@/css/style.css" />
     </stylesheets>
 
+    <MenuBar fx:id="menuBar" managed="false" visible="false">
+        <Menu text="Settings">
+            <MenuItem onAction="#changeNick" text="Change NickName" />
+        </Menu>
+    </MenuBar>
+
     <HBox fx:id="authPanel">
         <TextField fx:id="loginField" promptText="login" HBox.hgrow="ALWAYS" />
         <PasswordField fx:id="passwordField" onAction="#tryToAuth" promptText="password" HBox.hgrow="ALWAYS" />

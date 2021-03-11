@@ -8,10 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -42,10 +39,12 @@ public class Controller implements Initializable {
     public HBox msgPanel;
     @FXML
     public ListView<String> clintList;
+    @FXML
+    public MenuBar menuBar;
+
 
     private final String IP_ADDR = "localhost";
-    private final int PORT = 8189;
-
+    private final int PORT = 8189;    
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
@@ -63,6 +62,8 @@ public class Controller implements Initializable {
         msgPanel.setManaged(authenticated);
         authPanel.setVisible(!authenticated);
         authPanel.setManaged(!authenticated);
+        menuBar.setVisible(authenticated);
+        menuBar.setManaged(authenticated);
         clintList.setVisible(authenticated);
         clintList.setManaged(authenticated);
         if (!authenticated){
@@ -71,6 +72,10 @@ public class Controller implements Initializable {
         }
         textArea.clear();
         setTitle(nickName);
+    }
+
+    public String getNickName() {
+        return nickName;
     }
 
     @Override
@@ -128,6 +133,15 @@ public class Controller implements Initializable {
                             if (str.equals(Commands.END)) {
                                 System.out.println("Your connection is closed");
                                 break;
+                            }
+                            if (str.startsWith(Commands.CHG_OK)){
+                                regController.tryRegResult(Commands.CHG_OK);
+                                String[] token = str.split("\\s");
+                                nickName = token[1];
+                                setTitle(nickName);
+                            }
+                            if (str.startsWith(Commands.CHG_NO)){
+                                regController.tryRegResult(Commands.CHG_NO);
                             }
                         if (str.startsWith(Commands.CLIENT_LIST)){
                             String[] token = str.split("\\s");
@@ -227,6 +241,16 @@ public class Controller implements Initializable {
         if (regStage == null){
             initRegWindow();
         }
+        regStage.setTitle("Chat registration");
+        regController.setRegMode(true);
+        regStage.show();
+    }
+    public void changeNick(ActionEvent actionEvent) {
+        if (regStage == null){
+            initRegWindow();
+        }
+        regStage.setTitle("Chat nickname changing");
+        regController.setRegMode(false);
         regStage.show();
     }
 
@@ -238,7 +262,6 @@ public class Controller implements Initializable {
             regController.setController(this); /*// Controller установил ссылку на себя в контроллере RegController*/
 
             regStage = new Stage();
-            regStage.setTitle("Chat registration");
             regStage.setScene(new Scene(root, 450, 340));
             regStage.initStyle(StageStyle.UTILITY);
             regStage.initModality(Modality.APPLICATION_MODAL);
@@ -254,6 +277,14 @@ public class Controller implements Initializable {
         }
         try {
             out.writeUTF(String.format("%s %s %s %s", Commands.REG, login, password, nickname));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void tryToChange(String nickName){
+        try {
+            out.writeUTF(String.format("%s %s", Commands.CHG,  nickName));
         } catch (IOException e) {
             e.printStackTrace();
         }

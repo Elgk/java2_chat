@@ -89,7 +89,20 @@ public class ClientHandler {
                         } else {
                             server.broadcastMsg(this, str);
                         }
+                        if (str.startsWith(Commands.CHG)){
+                            String[] token = str.split("\\s");
+                            boolean updSuccess = server.getAuthService().changeNickName(login, token[1]);
+                            if (updSuccess){
+                                nickname = token[1];
+                                sendMsg(Commands.CHG_OK +" "+ nickname);
+                                server.broadcastClientList();
+                                // server.broadcastMsg(this, str);
+                            }else {
+                                sendMsg(Commands.CHG_NO);
+                            }
+                        }
                     }
+
                 }catch (SocketTimeoutException e){
                     sendMsg(Commands.END);
                  //   e.printStackTrace();

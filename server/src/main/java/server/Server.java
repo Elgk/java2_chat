@@ -7,9 +7,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 
 public class Server {
     private final int PORT = 8189;
@@ -22,14 +22,15 @@ public class Server {
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();// потокобезопасный класс
-        authService = new SimpleAuthService();
+        if (!SQLHandler.connect()){
+            throw new RuntimeException("Attempt to connect to DB is failed");
+        }
+        //authService = new SimpleAuthService();
+        authService = new DBAuthService();
 
         try {
             server = new ServerSocket(PORT);
             System.out.println("Server started");
-           // System.out.println("Server connected");
-
-
             while (true){
                 socket = server.accept();
                 System.out.println("Client connected");
@@ -42,6 +43,11 @@ public class Server {
             try {
                 socket.close();
             } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                SQLHandler.disconnect();
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
             try {

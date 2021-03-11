@@ -9,12 +9,11 @@
         <URL value="@/css/style.css" />
     </stylesheets>
 
-
-        <TextField fx:id="loginField" promptText="login"  />
-        <PasswordField fx:id="passwordField"  promptText="password"  />
-        <TextField fx:id="nickNameField"  promptText="nickname" />
-        <Button fx:id="buttonReg" minWidth="100" onAction="#tryToReg"  text="register" />
-        <TextArea fx:id="textArea" editable="false"  />
-
+    <TextField fx:id="loginField" promptText="login"  />
+    <PasswordField fx:id="passwordField"  promptText="password"  />
+    <TextField fx:id="nickNameField"  promptText="nickname" />
+    <Button fx:id="btnReg" minWidth="100" onAction="#tryToReg" text="register" />
+    <Button fx:id="btnChange" minWidth="100" onAction="#tryToChange" text="Change" managed="false" visible="false"/>
+    <TextArea fx:id="textArea" editable="false"  />
 
 </VBox>
