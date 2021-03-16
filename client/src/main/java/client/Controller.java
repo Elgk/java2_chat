@@ -17,11 +17,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -48,6 +48,8 @@ public class Controller implements Initializable {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private File log_file;
+    private FileWriter file_out;
 
     private boolean authenticated;
     private String nickName;
@@ -113,7 +115,10 @@ public class Controller implements Initializable {
                             if (str.startsWith(Commands.AUTH)) {
                                 String[] token = str.split("\\s");
                                 nickName = token[1];
+                                defineHistoryFile();
                                 setAuthenticated(true);
+                                addChatHistory();
+                                file_out = new FileWriter(log_file, true);
                                 break;
                             }
                             if (str.startsWith(Commands.REG_OK)){
@@ -154,6 +159,7 @@ public class Controller implements Initializable {
                         }
                         }else {
                             textArea.appendText(str + "\n");
+                            file_out.write(str + "\n");
                         }
                     }
                 }catch (RuntimeException e){
@@ -164,6 +170,9 @@ public class Controller implements Initializable {
                     setAuthenticated(false);
                     try {
                         socket.close();
+                        if (!(file_out == null)){
+                            file_out.close();
+                        }
                         textArea.appendText("Your connection is closed");
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -287,6 +296,35 @@ public class Controller implements Initializable {
             out.writeUTF(String.format("%s %s", Commands.CHG,  nickName));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    private void addChatHistory(){
+        try {
+            List<String> history_list = Files.readAllLines(log_file.toPath());
+            if (history_list.size() > 100){
+                for (int i = history_list.size()-100; i < history_list.size(); i++) {
+                    textArea.appendText(history_list.get(i)+ "\n");
+                }
+            }else{
+                for (String ls: history_list) {
+                    textArea.appendText(ls+ "\n");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void defineHistoryFile(){
+        log_file = new File("history/history_"+loginField.getText().trim()+".txt");
+        if (!log_file.exists()){
+            File f_dir = new File("./history");
+            try {
+                f_dir.mkdirs();
+                log_file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
