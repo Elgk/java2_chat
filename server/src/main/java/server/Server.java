@@ -27,7 +27,7 @@ public class Server {
         }
         //authService = new SimpleAuthService();
         authService = new DBAuthService();
-
+        //    ExecutorService service =  Executors.newCachedThreadPool();
         try {
             server = new ServerSocket(PORT);
             System.out.println("Server started");
@@ -35,6 +35,10 @@ public class Server {
                 socket = server.accept();
                 System.out.println("Client connected");
                 System.out.println("Client: "+ socket.getRemoteSocketAddress());
+/*                service.execute(() ->{
+                    new ClientHandler(this, socket);
+                        });
+                service.shutdown();*/
                 new ClientHandler(this, socket);
             }
         } catch (IOException e) {
