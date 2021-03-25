@@ -7,8 +7,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClientHandler {
+    private static final Logger logger = Logger.getLogger(ClientHandler.class.getName());
     private  Server server;
     private  Socket socket;
     private  DataInputStream in;
@@ -22,14 +25,6 @@ public class ClientHandler {
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream((socket.getOutputStream()));
-/* как я понимаю тему потоков, в даннойй задаче
-    если рассматривать  как один клиент - один поток
-    в данном месте кода (конструктор объекта) нужно создать один поток, следовательно пул потоков здесь не нужен
-    попробовала  сделать создание пула потоков  в модуле Server, а здесь создание потока Thread убирала,
-     но я разницу в работе приложения не увидела,
-    периодичности или расписания запуска  ClientHandler не требуется,
-    поэтому оставила код без изменений
-*/
             new Thread(() -> {
                 try {
                     // set timeout
@@ -40,6 +35,7 @@ public class ClientHandler {
                         String str = in.readUTF();
                         if (str.startsWith(Commands.END)) {
                             out.writeUTF(Commands.END);
+                            logger.info(" Client disconnected");
                             throw new RuntimeException(" Client disconnected");
                         }
                         if (str.startsWith(Commands.AUTH)) {
@@ -55,7 +51,7 @@ public class ClientHandler {
                                     nickname = newNick;
                                     sendMsg(Commands.AUTH_OK + " " + nickname);
                                     server.subscribe(this);
-                                    System.out.println("Client: " + socket.getRemoteSocketAddress() + " connected with nick " + nickname);
+                                    logger.info("Client: " + socket.getRemoteSocketAddress() + " connected with nick " + nickname);
                                     break;
                                 } else {
                                     sendMsg("User is alredy login");
@@ -109,18 +105,18 @@ public class ClientHandler {
                             }
                         }
                     }
-
                 }catch (SocketTimeoutException e){
                     sendMsg(Commands.END);
-                 //   e.printStackTrace();
-                    System.out.println(e.getMessage());
+                    logger.log(Level.ALL,"timeout", e);
+                   // System.out.println(e.getMessage());
                 }catch (RuntimeException e){
-                    System.out.println(e.getMessage());
+                    logger.log(Level.ALL,"runtime exception", e);
+                  //  System.out.println(e.getMessage());
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     server.unsubscribe(this);
-                    System.out.println("Client disconnected: " + nickname);
+                    logger.info("Client disconnected: " + nickname);
                     try {
                         socket.close();
                     } catch (IOException e) {

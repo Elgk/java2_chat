@@ -10,8 +10,11 @@ import java.net.Socket;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server {
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
     private final int PORT = 8189;
     private ServerSocket server;
     private Socket socket;
@@ -21,24 +24,21 @@ public class Server {
     private AuthService authService;
 
     public Server() {
-        clients = new CopyOnWriteArrayList<>();// потокобезопасный класс
+        clients = new CopyOnWriteArrayList<>();
         if (!SQLHandler.connect()){
-            throw new RuntimeException("Attempt to connect to DB is failed");
+            RuntimeException e = new RuntimeException("Attempt to connect to DB is failed");
+            logger.log(Level.SEVERE,"DB connection",e);
+            throw e; //new RuntimeException("Attempt to connect to DB is failed");
         }
-        //authService = new SimpleAuthService();
+
         authService = new DBAuthService();
-        //    ExecutorService service =  Executors.newCachedThreadPool();
         try {
             server = new ServerSocket(PORT);
-            System.out.println("Server started");
+            logger.info("Server started");
             while (true){
                 socket = server.accept();
-                System.out.println("Client connected");
-                System.out.println("Client: "+ socket.getRemoteSocketAddress());
-/*                service.execute(() ->{
-                    new ClientHandler(this, socket);
-                        });
-                service.shutdown();*/
+                logger.info("Client connected");
+                logger.info("Client: "+ socket.getRemoteSocketAddress());
                 new ClientHandler(this, socket);
             }
         } catch (IOException e) {
@@ -66,7 +66,6 @@ public class Server {
         String message = String.format("[%s]: %s", sender.getNickname(), msg);
         for (ClientHandler client : clients) {
             client.sendMsg(message);
-
         }
     }
 
